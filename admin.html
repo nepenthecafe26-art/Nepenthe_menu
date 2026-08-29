@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل مدیریت منو | نپنته</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e0c;
+    --panel:#121a16;
+    --card:#161f1a;
+    --ink:#eef1ee;
+    --ink-dim:#8fa098;
+    --cream:#efe9dc;
+    --charcoal:#2b2b28;
+    --gold:#5c8974;
+    --gold-soft:rgba(92,137,116,0.24);
+    --danger:#e05a5a;
+    --line:rgba(239,233,220,0.09);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Vazirmatn', sans-serif;
+    min-height:100svh;
+    padding-bottom:3rem;
+  }
+
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:#0f1512;
+    border-bottom:1px solid var(--line);
+    padding:1rem 1.1rem;
+    display:flex; flex-direction:column; gap:0.7rem;
+  }
+  header.top h1{ font-size:1.1rem; font-weight:800; }
+  header.top .sub{ font-size:0.78rem; color:var(--ink-dim); }
+
+  .toolbar{ display:flex; flex-wrap:wrap; gap:0.5rem; }
+  button{ font-family:inherit; cursor:pointer; border:none; -webkit-tap-highlight-color:transparent; }
+  .btn{
+    background:#26262a; color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:0.55rem 0.85rem;
+    font-size:0.78rem; font-weight:600;
+  }
+  .btn:active{ filter:brightness(0.92); }
+  .btn.primary{ background:var(--gold); color:#0d130f; border-color:transparent; }
+  .btn.danger{ background:transparent; color:var(--danger); border-color:#e05a5a55; }
+  .btn.ghost{ background:transparent; }
+
+  main{ padding:1rem 1.1rem; display:flex; flex-direction:column; gap:1.1rem; max-width:760px; margin:0 auto; }
+
+  .cat-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:0.9rem;
+  }
+  .cat-head{
+    display:flex; align-items:center; gap:0.5rem;
+    margin-bottom:0.8rem;
+  }
+  .cat-head input[type=text]{
+    flex:1;
+    background:var(--card);
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:inherit; font-weight:700; font-size:0.92rem;
+    padding:0.55rem 0.7rem;
+    border-radius:9px;
+  }
+
+  .product-row{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:0.7rem;
+    margin-bottom:0.6rem;
+    display:flex; flex-direction:column; gap:0.5rem;
+  }
+  .product-row .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+  .field{ display:flex; flex-direction:column; gap:0.25rem; }
+  .field label{ font-size:0.68rem; color:var(--ink-dim); }
+  .field input[type=text], .field input[type=number], .field textarea{
+    background:#1b241f;
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:inherit; font-size:0.83rem;
+    padding:0.5rem 0.6rem;
+    border-radius:8px;
+    width:100%;
+  }
+  .field textarea{ resize:vertical; min-height:2.4rem; }
+  .checkbox-row{ display:flex; align-items:center; gap:0.4rem; font-size:0.76rem; color:var(--ink-dim); }
+  .checkbox-row input{ width:15px; height:15px; }
+
+  .img-row{ display:flex; align-items:center; gap:0.7rem; }
+  .img-thumb{
+    width:52px; height:52px; border-radius:10px; flex:0 0 auto;
+    background:#1b241f; background-size:cover; background-position:center;
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink-dim); font-size:0.62rem; text-align:center;
+  }
+  .cat-head .img-thumb{ width:44px; height:44px; border-radius:50%; }
+  .img-actions{ display:flex; flex-direction:column; gap:0.35rem; flex:1; }
+  .img-actions .btn{ font-size:0.72rem; padding:0.4rem 0.6rem; align-self:flex-start; }
+  .img-file{
+    position:absolute; width:1px; height:1px;
+    padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+  .product-row .row-actions{ display:flex; justify-content:flex-end; }
+
+  .add-product-btn{ width:100%; margin-top:0.2rem; }
+
+  .empty-note{ color:var(--ink-dim); font-size:0.8rem; padding:0.5rem 0; text-align:center; }
+
+  .toast{
+    position:fixed; bottom:1.2rem; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--gold); color:#0d130f; font-weight:700; font-size:0.85rem;
+    padding:0.6rem 1.1rem; border-radius:10px;
+    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+    z-index:50;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .file-input{
+    position:absolute; width:1px; height:1px;
+    padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  .warn-box{
+    background:rgba(224,90,90,0.08);
+    border:1px solid #e05a5a33;
+    color:var(--ink-dim);
+    font-size:0.74rem; line-height:1.9;
+    padding:0.7rem 0.9rem;
+    border-radius:10px;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>پنل مدیریت منو — کافه نپنته</h1>
+    <div class="sub">تغییرات را اینجا اعمال کن، سپس «ذخیره تغییرات» را بزن تا در صفحه منو دیده شود.</div>
+  </div>
+  <div class="toolbar">
+    <input type="password" id="adminPassword" class="btn" style="min-width:9rem;" placeholder="رمز عبور مدیریت">
+    <button class="btn primary" id="saveBtn">ذخیره تغییرات</button>
+    <button class="btn" id="addCatBtn">+ دسته‌بندی جدید</button>
+    <button class="btn" id="exportBtn">دریافت خروجی (پشتیبان)</button>
+    <button class="btn" id="importBtn">بارگذاری از فایل</button>
+    <button class="btn danger" id="resetBtn">بازگشت به حالت پیش‌فرض</button>
+    <input type="file" id="importFile" class="file-input" accept="application/json">
+  </div>
+  <div class="warn-box">تغییرات از اینجا مستقیم روی سایت زنده ذخیره میشه و همه گوشی‌ها می‌بینن. برای ذخیره باید رمز عبور مدیریت (همونی که تو تنظیمات Netlify گذاشتی) رو بالا وارد کنی. عکس‌ها قبل از ذخیره خودکار کوچیک و فشرده می‌شن.</div>
+</header>
+
+<main id="main"></main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'nepentheMenuData';
+
+// Same defaults as the customer-facing menu (index.html), so the admin panel
+// starts from what's already on the menu the first time it's opened.
+const DEFAULT_CATEGORIES = [
+  { id:'hot_coffee',    label:'بارگرم' },
+  { id:'hot_no_coffee', label:'بارگرم بدون کافئین' },
+  { id:'iced_coffee',   label:'آیس کافی‌ها' },
+  { id:'cold_bar',      label:'بارسرد' },
+  { id:'milkshake',     label:'میلک‌شیک‌ها' },
+  { id:'herbal',        label:'دمنوش‌ها' },
+  { id:'cake',          label:'دسر' },
+];
+
+const DEFAULT_PRODUCTS = {
+  hot_coffee: [
+    { name:'کارامل ماکیاتو', desc:'اسپرسو، شیر بخاردیده و شربت وانیل با نوارهای کارامل روی فوم.', price:230000, img:'' },
+    { name:'موکا', desc:'ترکیب اسپرسو، شکلات تلخ و شیر بخاردیده.', price:230000, img:'' },
+    { name:'کاپوچینو', desc:'لایه‌ای از اسپرسو، شیر بخاردیده و فوم شیری روی آن.', price:180000, img:'' },
+    { name:'نسکافه اسپشیال', desc:'نسکافه هوازده به‌شکل فوم روی شیر گرم یا سرد.', price:190000, img:'' },
+    { name:'کورتادو', desc:'اسپرسو با نسبت برابر شیر بخاردیده، بدون فوم زیاد.', price:190000, img:'' },
+    { name:'آمریکانو', desc:'اسپرسو رقیق‌شده با آب داغ، تلخ و ساده.', price:150000, img:'' },
+    { name:'اسپرسو دبل', desc:'دو شات غلیظ اسپرسو، سرو در فنجان کوچک.', price:120000, img:'' },
+    { name:'اسپرسو سینگل', desc:'یک شات غلیظ اسپرسو، سرو در فنجان کوچک.', price:110000, img:'' },
+    { name:'لاته', desc:'اسپرسو و شیر بخاردیده با لایه نازک فوم روی آن.', price:200000, img:'' },
+    { name:'لاته فندق', desc:'اسپرسو، شیر بخاردیده و شربت فندق.', price:240000, img:'' },
+  ],
+  hot_no_coffee: [
+    { name:'چای ماسالا', desc:'چای سیاه دم‌کرده با شیر و ادویه‌هایی چون دارچین، هل و زنجبیل.', price:180000, img:'' },
+    { name:'چای کرک', desc:'چای صورتی سنتی با شیر، سرو با خامه و پسته.', price:190000, img:'' },
+    { name:'هات چاکلت', desc:'شکلات ذوب‌شده با شیر بخاردیده.', price:190000, img:'' },
+    { name:'چای سیاه', desc:'دم سنگین چای سیاه، سرو با نبات یا لیمو.', price:70000, img:'' },
+  ],
+  iced_coffee: [
+    { name:'کوکو فراپه', desc:'یخ خردشده، پودر کاکائو و شیر، میکس شده تا بافتی خنک و ابری.', price:265000, img:'' },
+    { name:'آیس کارامل ماکیاتو', desc:'اسپرسو روی یخ با شیر سرد، شربت وانیل و کارامل.', price:225000, img:'' },
+    { name:'آیس موکا', desc:'اسپرسو، شکلات و شیر سرد روی یخ.', price:225000, img:'' },
+    { name:'آیس لاته', desc:'اسپرسو روی یخ با شیر سرد.', price:220000, img:'' },
+    { name:'آفوگاتو', desc:'یک اسکوپ بستنی وانیل غرق‌شده در یک شات اسپرسوی داغ.', price:250000, img:'' },
+    { name:'آیس آمریکانو', desc:'اسپرسوی رقیق‌شده روی یخ، تلخ و خنک.', price:150000, img:'' },
+  ],
+  cold_bar: [
+    { name:'پینک نیتی', desc:'', price:280000, img:'' },
+    { name:'بلو اسکای', desc:'', price:240000, img:'' },
+    { name:'رین باو', desc:'', price:250000, img:'' },
+    { name:'ویولت بری', desc:'', price:230000, img:'' },
+    { name:'موهیتو', desc:'نعنای تازه، لیموی تازه و آب‌گازدار روی یخ.', price:190000, img:'' },
+    { name:'رد موهیتو', desc:'موهیتوی کلاسیک با شربت توت قرمز.', price:220000, img:'' },
+  ],
+  milkshake: [
+    { name:'شیک موز شکلات', desc:'موز، شیر، بستنی و شکلات، میکس‌شده تا بافتی نرم و خامه‌ای.', price:360000, img:'' },
+    { name:'شیک اورئو', desc:'بیسکویت اورئو، شیر و بستنی وانیل میکس‌شده.', price:370000, img:'' },
+    { name:'شیک نوت فرنگی', desc:'توت‌فرنگی تازه، شیر و بستنی وانیل.', price:300000, img:'' },
+    { name:'شیک شکلات', desc:'شکلات، شیر و بستنی وانیل میکس‌شده.', price:280000, img:'' },
+    { name:'شیک کیت کت', desc:'ویفر شکلاتی کیت‌کت، شیر و بستنی وانیل.', price:290000, img:'' },
+    { name:'شیک نوتلا', desc:'کرم فندق و کاکائو نوتلا با شیر و بستنی وانیل.', price:400000, img:'' },
+  ],
+  herbal: [
+    { name:'دمنوش انرژی', desc:'', price:215000, img:'' },
+    { name:'دمنوش آرامش', desc:'', price:180000, img:'' },
+    { name:'دمنوش نشاط', desc:'', price:180000, img:'' },
+    { name:'دمنوش سرماخوردگی', desc:'', price:130000, img:'' },
+  ],
+  cake: [
+    { name:'کیک روز', desc:'', price:null, img:'' },
+  ],
+};
+
+async function loadData(){
+  try{
+    const res = await fetch('/.netlify/functions/menu');
+    if(res.ok){
+      const remote = await res.json();
+      if(remote && remote.categories && remote.products) return remote;
+    }
+  }catch(e){ /* offline — fall through to local cache */ }
+  try{
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(parsed && parsed.categories && parsed.products) return parsed;
+    }
+  }catch(e){}
+  // deep-clone the defaults so editing never mutates the constants above
+  return JSON.parse(JSON.stringify({ categories:DEFAULT_CATEGORIES, products:DEFAULT_PRODUCTS }));
+}
+
+let data = null;
+
+const mainEl = document.getElementById('main');
+const toastEl = document.getElementById('toast');
+
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(()=> toastEl.classList.remove('show'), 1800);
+}
+
+function slugify(label, existingIds){
+  let base = 'cat_' + Date.now().toString(36);
+  let id = base, i = 1;
+  while(existingIds.includes(id)){ id = base + '_' + (i++); }
+  return id;
+}
+
+function render(){
+  if(data.categories.length === 0){
+    mainEl.innerHTML = '<div class="empty-note">هنوز دسته‌بندی‌ای وجود ندارد. با دکمه «+ دسته‌بندی جدید» شروع کن.</div>';
+    return;
+  }
+  mainEl.innerHTML = data.categories.map((cat, ci) => {
+    const items = data.products[cat.id] || [];
+    return `
+      <section class="cat-card" data-cat="${ci}">
+        <div class="cat-head">
+          <div class="img-thumb cat-img-thumb" data-ci="${ci}" style="${cat.img ? `background-image:url('${cat.img}')` : ''}">${cat.img ? '' : 'آیکون'}</div>
+          <input type="text" class="cat-label" value="${escapeAttr(cat.label)}" data-ci="${ci}">
+          <button class="btn ghost cat-img-upload-btn" data-ci="${ci}">آیکون دسته</button>
+          <input type="file" class="img-file cat-img-file" data-ci="${ci}" accept="image/*">
+          <button class="btn danger del-cat-btn" data-ci="${ci}">حذف دسته</button>
+        </div>
+        ${items.length === 0 ? '<div class="empty-note">محصولی در این دسته نیست.</div>' : items.map((p, pi) => productRow(p, ci, pi)).join('')}
+        <button class="btn add-product-btn" data-ci="${ci}">+ افزودن محصول به این دسته</button>
+      </section>
+    `;
+  }).join('');
+
+  attachHandlers();
+}
+
+function productRow(p, ci, pi){
+  const hasPrice = p.price !== null && p.price !== undefined;
+  return `
+    <div class="product-row" data-ci="${ci}" data-pi="${pi}">
+      <div class="img-row">
+        <div class="img-thumb p-img-thumb" style="${p.img ? `background-image:url('${p.img}')` : ''}">${p.img ? '' : 'بدون عکس'}</div>
+        <div class="img-actions">
+          <button class="btn ghost p-img-upload-btn" type="button">آپلود عکس محصول</button>
+          <input type="file" class="img-file p-img-file" accept="image/*">
+          ${p.img ? '<button class="btn danger ghost p-img-remove-btn" type="button">حذف عکس</button>' : ''}
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>نام محصول</label>
+          <input type="text" class="p-name" value="${escapeAttr(p.name)}">
+        </div>
+        <div class="field">
+          <label>قیمت (تومان)</label>
+          <input type="number" class="p-price" value="${hasPrice ? p.price : ''}" ${hasPrice ? '' : 'disabled'} placeholder="مثلاً 230000">
+        </div>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" class="p-noprice" ${hasPrice ? '' : 'checked'}>
+        <span>بدون قیمت ثابت (مثل کیک روز — به‌جای عدد، پیغام «از کارکنان بپرسید» نشان داده می‌شود)</span>
+      </div>
+      <div class="field">
+        <label>توضیح (اختیاری — فقط اگر مطمئنی داخلش چیه بنویس)</label>
+        <textarea class="p-desc" placeholder="مثلاً: اسپرسو، شیر بخاردیده و شربت کارامل.">${escapeHtml(p.desc || '')}</textarea>
+      </div>
+      <div class="row-actions">
+        <button class="btn danger del-product-btn">حذف محصول</button>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+function escapeAttr(s){
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+// Reads an image file, shrinks it to a reasonable size, and returns a compressed
+// JPEG data URL — keeps things small since everything is stored in the browser's
+// localStorage (which has a small size limit, a few MB total).
+function fileToCompressedDataURL(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('read failed'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('decode failed'));
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > height && width > maxDim){ height = Math.round(height * maxDim / width); width = maxDim; }
+        else if(height > maxDim){ width = Math.round(width * maxDim / height); height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function attachHandlers(){
+  document.querySelectorAll('.cat-label').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      data.categories[Number(inp.dataset.ci)].label = inp.value;
+    });
+  });
+
+  document.querySelectorAll('.cat-img-upload-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const ci = btn.dataset.ci;
+      document.querySelector(`.cat-img-file[data-ci="${ci}"]`).click();
+    });
+  });
+  document.querySelectorAll('.cat-img-file').forEach(inp=>{
+    inp.addEventListener('change', async ()=>{
+      const file = inp.files[0];
+      if(!file) return;
+      try{
+        const dataUrl = await fileToCompressedDataURL(file, 300, 0.75);
+        data.categories[Number(inp.dataset.ci)].img = dataUrl;
+        render();
+      }catch(e){ alert('بارگذاری عکس با خطا مواجه شد.'); }
+    });
+  });
+
+  document.querySelectorAll('.del-cat-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const ci = Number(btn.dataset.ci);
+      const cat = data.categories[ci];
+      if(!confirm(`دسته «${cat.label}» و همه محصولات داخلش حذف شود؟`)) return;
+      delete data.products[cat.id];
+      data.categories.splice(ci, 1);
+      render();
+    });
+  });
+
+  document.querySelectorAll('.add-product-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const ci = Number(btn.dataset.ci);
+      const cat = data.categories[ci];
+      if(!data.products[cat.id]) data.products[cat.id] = [];
+      data.products[cat.id].push({ name:'محصول جدید', desc:'', price:0, img:'' });
+      render();
+    });
+  });
+
+  document.querySelectorAll('.product-row').forEach(row=>{
+    const ci = Number(row.dataset.ci);
+    const pi = Number(row.dataset.pi);
+    const cat = data.categories[ci];
+    const item = data.products[cat.id][pi];
+
+    const nameInp = row.querySelector('.p-name');
+    const priceInp = row.querySelector('.p-price');
+    const noPriceChk = row.querySelector('.p-noprice');
+    const descInp = row.querySelector('.p-desc');
+    const delBtn = row.querySelector('.del-product-btn');
+    const imgUploadBtn = row.querySelector('.p-img-upload-btn');
+    const imgFileInp = row.querySelector('.p-img-file');
+    const imgRemoveBtn = row.querySelector('.p-img-remove-btn');
+
+    nameInp.addEventListener('input', ()=>{ item.name = nameInp.value; });
+    priceInp.addEventListener('input', ()=>{ item.price = priceInp.value === '' ? 0 : Number(priceInp.value); });
+    descInp.addEventListener('input', ()=>{ item.desc = descInp.value; });
+    noPriceChk.addEventListener('change', ()=>{
+      if(noPriceChk.checked){ item.price = null; priceInp.disabled = true; priceInp.value = ''; }
+      else{ item.price = 0; priceInp.disabled = false; priceInp.focus(); }
+    });
+    delBtn.addEventListener('click', ()=>{
+      if(!confirm(`محصول «${item.name}» حذف شود؟`)) return;
+      data.products[cat.id].splice(pi, 1);
+      render();
+    });
+    imgUploadBtn.addEventListener('click', ()=> imgFileInp.click());
+    imgFileInp.addEventListener('change', async ()=>{
+      const file = imgFileInp.files[0];
+      if(!file) return;
+      try{
+        const dataUrl = await fileToCompressedDataURL(file, 640, 0.72);
+        item.img = dataUrl;
+        render();
+      }catch(e){ alert('بارگذاری عکس با خطا مواجه شد.'); }
+    });
+    if(imgRemoveBtn){
+      imgRemoveBtn.addEventListener('click', ()=>{ item.img = ''; render(); });
+    }
+  });
+}
+
+document.getElementById('addCatBtn').addEventListener('click', ()=>{
+  const label = prompt('نام دسته‌بندی جدید را وارد کن:');
+  if(!label || !label.trim()) return;
+  const id = slugify(label, data.categories.map(c=>c.id));
+  data.categories.push({ id, label:label.trim() });
+  data.products[id] = [];
+  render();
+});
+
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  const saveBtn = document.getElementById('saveBtn');
+  const pw = document.getElementById('adminPassword').value;
+  if(!pw){ showToast('اول رمز عبور مدیریت رو وارد کن'); return; }
+  saveBtn.disabled = true;
+  const originalText = saveBtn.textContent;
+  saveBtn.textContent = 'در حال ذخیره...';
+  try{
+    const res = await fetch('/.netlify/functions/menu', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ password: pw, data }),
+    });
+    const result = await res.json().catch(()=>null);
+    if(!res.ok || !result || !result.ok){
+      throw new Error((result && result.error) || 'save failed');
+    }
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+    showToast('ذخیره شد — الان روی گوشی همه دیده می‌شود.');
+  }catch(e){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e2){}
+    showToast(e.message === 'رمز عبور اشتباه است' ? 'رمز عبور اشتباهه' : 'ذخیره روی سرور با خطا مواجه شد');
+  }finally{
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+  }
+});
+
+document.getElementById('resetBtn').addEventListener('click', async ()=>{
+  if(!confirm('همه تغییرات پاک شود و منو به حالت پیش‌فرض برگردد؟')) return;
+  const pw = document.getElementById('adminPassword').value;
+  if(!pw){ showToast('اول رمز عبور مدیریت رو وارد کن'); return; }
+  data = JSON.parse(JSON.stringify({ categories:DEFAULT_CATEGORIES, products:DEFAULT_PRODUCTS }));
+  try{
+    await fetch('/.netlify/functions/menu', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ password: pw, data }),
+    });
+  }catch(e){}
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+  render();
+  showToast('به حالت پیش‌فرض برگشت');
+});
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'nepenthe-menu-backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click', ()=>{
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!parsed.categories || !parsed.products) throw new Error('invalid');
+      data = parsed;
+      render();
+      showToast('فایل بارگذاری شد — فراموش نکن «ذخیره تغییرات» را بزنی.');
+    }catch(err){
+      alert('فایل معتبر نیست.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+(async function init(){
+  mainEl.innerHTML = '<div class="empty-note">در حال بارگذاری منو...</div>';
+  data = await loadData();
+  render();
+})();
+</script>
+</body>
+</html>
