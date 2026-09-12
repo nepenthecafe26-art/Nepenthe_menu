@@ -29,8 +29,6 @@
     overflow:hidden;
   }
   .app-shell{ display:flex; flex-direction:column; height:100svh; }
-
-  /* ---------------- TOP BAR ---------------- */
   .topbar{
     flex:0 0 auto;
     display:flex; flex-direction:column; align-items:center; gap:0.3rem;
@@ -59,12 +57,8 @@
     font-size:0.68rem;
     color:var(--ink-dim);
   }
-
-  /* ---------------- LAYOUT ---------------- */
   .layout{ flex:1; display:flex; min-height:0; direction:ltr; }
   .layout > *{ direction:rtl; }
-
-  /* sidebar */
   .sidebar{
     flex:0 0 92px;
     overflow-y:auto;
@@ -99,10 +93,7 @@
     transition:color .25s;
   }
   .cat-btn.active span.lbl{ color:var(--gold); }
-
-  /* main panel */
   .panel{ flex:1; min-width:0; display:flex; flex-direction:column; min-height:0; }
-
   .panel-hero{
     flex:0 0 auto;
     display:flex; flex-direction:column; align-items:center;
@@ -126,10 +117,8 @@
     font-size:1.05rem;
     color:var(--gold);
   }
-
   .products-scroll{ flex:1; overflow-y:auto; padding:0.4rem 1rem 1.2rem; }
   .products-grid{ display:flex; flex-direction:column; gap:1.1rem; }
-
   .product-card{
     background:var(--card);
     border:1px solid var(--line);
@@ -139,7 +128,6 @@
     animation:rise .5s ease forwards;
   }
   @keyframes rise{ to{ opacity:1; transform:none; } }
-
   .product-img{
     position:relative;
     width:100%; aspect-ratio:4/3;
@@ -178,7 +166,6 @@
   .price-old{ color:var(--ink-dim); font-size:0.78rem; text-decoration:line-through; }
   .price-unit{ color:var(--ink-dim); font-size:0.72rem; }
   .price-note{ color:var(--ink-dim); font-size:0.8rem; }
-
   .action-row{ margin-top:0.85rem; display:flex; align-items:center; gap:0.55rem; }
   .icon-pill{
     display:flex; align-items:center; gap:0.3rem;
@@ -203,8 +190,6 @@
   }
   .add-btn:active{ transform:scale(0.97); filter:brightness(0.95); }
   .add-btn svg{ width:16px; height:16px; }
-
-  /* ---------------- CART BAR ---------------- */
   .cartbar{
     flex:0 0 auto;
     display:flex; align-items:center; justify-content:space-between;
@@ -222,8 +207,6 @@
     display:flex; align-items:center; justify-content:center;
   }
   .cartbar .total{ color:var(--gold); font-weight:700; font-size:0.85rem; }
-
-  /* ---------------- CART SHEET ---------------- */
   .cart-overlay{
     position:fixed; inset:0; z-index:300;
     background:rgba(4,6,5,0.6);
@@ -294,7 +277,6 @@
     display:flex; align-items:center; justify-content:space-between;
   }
   .cart-sheet-foot .grand{ color:var(--gold); font-weight:800; font-size:1rem; }
-
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
@@ -303,7 +285,7 @@
 <div class="app-shell">
   <header class="topbar">
     <span class="brand-badge">NEPENTHE</span>
-    <span class="delivery-note">روی سرویس بیرون‌بر ۳۰,۰۰۰ تومان اضافه می‌شود</span>
+    <span class="delivery-note" id="deliveryNote">روی سرویس بیرون‌بر ۳۰,۰۰۰ تومان اضافه می‌شود</span>
   </header>
 
   <div class="layout">
@@ -346,15 +328,10 @@
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-<script src="firebase-config.js"></script>
 <script>
 const toFa = n => n.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 const fmt = n => toFa(n.toLocaleString('en-US'));
 
-// img: '' means "waiting for the real product photo" -> renders a clean placeholder tile.
-// Once you send your photos, each gets dropped into the matching img field.
 const DEFAULT_CATEGORIES = [
   { id:'hot_coffee',    label:'بارگرم',            img:'' },
   { id:'hot_no_coffee', label:'بارگرم بدون کافئین', img:'' },
@@ -421,13 +398,11 @@ const DEFAULT_PRODUCTS = {
 
 const IMG_PLACEHOLDER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10.5" r="1.6"/><path d="M21 15l-5.5-5.5L4 20"/></svg>';
 
-// ── Live menu data (Netlify Function + Netlify Blobs) ────────────────────
-// localStorage is kept only as an offline fallback cache.
 const MENU_STORAGE_KEY = 'nepentheMenuData';
 let categories = DEFAULT_CATEGORIES;
 let products = DEFAULT_PRODUCTS;
+let deliveryNote = 'روی سرویس بیرون‌بر ۳۰,۰۰۰ تومان اضافه می‌شود';
 let active = 'hot_coffee';
-// cart is a real state object now: { key: { name, price, img, qty } }
 let cart = {};
 
 const sidebar = document.getElementById('sidebar');
@@ -582,11 +557,11 @@ async function loadMenuData(){
       if(remote && remote.categories && remote.products){
         categories = remote.categories;
         products = remote.products;
+        if(typeof remote.deliveryNote === 'string') deliveryNote = remote.deliveryNote;
         try{ localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(remote)); }catch(e){}
       }
     }
   }catch(e){
-    // offline — fall back to the last copy saved on this device, else the built-in defaults
     try{
       const saved = localStorage.getItem(MENU_STORAGE_KEY);
       if(saved){
@@ -594,11 +569,17 @@ async function loadMenuData(){
         if(parsed && parsed.categories && parsed.products){
           categories = parsed.categories;
           products = parsed.products;
+          if(typeof parsed.deliveryNote === 'string') deliveryNote = parsed.deliveryNote;
         }
       }
     }catch(e2){}
   }
   active = categories[0] ? categories[0].id : 'hot_coffee';
+  const noteEl = document.getElementById('deliveryNote');
+  if(noteEl){
+    if(deliveryNote && deliveryNote.trim()){ noteEl.textContent = deliveryNote; noteEl.style.display = ''; }
+    else{ noteEl.style.display = 'none'; }
+  }
   render();
 }
 
