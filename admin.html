@@ -165,6 +165,18 @@
   <div class="warn-box">تغییرات از اینجا مستقیم روی سایت زنده ذخیره میشه و همه گوشی‌ها می‌بینن. برای ذخیره باید رمز عبور مدیریت (همونی که تو تنظیمات Netlify گذاشتی) رو بالا وارد کنی. عکس‌ها قبل از ذخیره خودکار کوچیک و فشرده می‌شن.</div>
 </header>
 
+<div class="wrap" style="max-width:760px; margin:0 auto; padding:1rem 1.1rem 0;">
+  <section class="cat-card">
+    <div class="cat-head" style="margin-bottom:0.5rem;">
+      <div style="font-weight:700; font-size:0.92rem;">تنظیمات عمومی</div>
+    </div>
+    <div class="field">
+      <label>یادداشت بالای منو (مثلاً هزینه بیرون‌بر) — اگه خالی بذاری، اصلاً نشون داده نمیشه</label>
+      <input type="text" id="deliveryNoteInput" placeholder="مثلاً: روی سرویس بیرون‌بر ۳۰,۰۰۰ تومان اضافه می‌شود">
+    </div>
+  </section>
+</div>
+
 <main id="main"></main>
 
 <div class="toast" id="toast"></div>
@@ -222,7 +234,7 @@ const DEFAULT_PRODUCTS = {
   milkshake: [
     { name:'شیک موز شکلات', desc:'موز، شیر، بستنی و شکلات، میکس‌شده تا بافتی نرم و خامه‌ای.', price:360000, img:'' },
     { name:'شیک اورئو', desc:'بیسکویت اورئو، شیر و بستنی وانیل میکس‌شده.', price:370000, img:'' },
-    { name:'شیک نوت فرنگی', desc:'توت‌فرنگی تازه، شیر و بستنی وانیل.', price:300000, img:'' },
+    { name:'شیک توت فرنگی', desc:'توت‌فرنگی تازه، شیر و بستنی وانیل.', price:300000, img:'' },
     { name:'شیک شکلات', desc:'شکلات، شیر و بستنی وانیل میکس‌شده.', price:280000, img:'' },
     { name:'شیک کیت کت', desc:'ویفر شکلاتی کیت‌کت، شیر و بستنی وانیل.', price:290000, img:'' },
     { name:'شیک نوتلا', desc:'کرم فندق و کاکائو نوتلا با شیر و بستنی وانیل.', price:400000, img:'' },
@@ -254,7 +266,11 @@ async function loadData(){
     }
   }catch(e){}
   // deep-clone the defaults so editing never mutates the constants above
-  return JSON.parse(JSON.stringify({ categories:DEFAULT_CATEGORIES, products:DEFAULT_PRODUCTS }));
+  return JSON.parse(JSON.stringify({
+    categories:DEFAULT_CATEGORIES,
+    products:DEFAULT_PRODUCTS,
+    deliveryNote:'روی سرویس بیرون‌بر ۳۰,۰۰۰ تومان اضافه می‌شود',
+  }));
 }
 
 let data = null;
@@ -499,7 +515,13 @@ document.getElementById('resetBtn').addEventListener('click', async ()=>{
   if(!confirm('همه تغییرات پاک شود و منو به حالت پیش‌فرض برگردد؟')) return;
   const pw = document.getElementById('adminPassword').value;
   if(!pw){ showToast('اول رمز عبور مدیریت رو وارد کن'); return; }
-  data = JSON.parse(JSON.stringify({ categories:DEFAULT_CATEGORIES, products:DEFAULT_PRODUCTS }));
+  data = JSON.parse(JSON.stringify({
+    categories:DEFAULT_CATEGORIES,
+    products:DEFAULT_PRODUCTS,
+    deliveryNote:'روی سرویس بیرون‌بر ۳۰,۰۰۰ تومان اضافه می‌شود',
+  }));
+  const noteInp = document.getElementById('deliveryNoteInput');
+  if(noteInp) noteInp.value = data.deliveryNote;
   try{
     await fetch('/.netlify/functions/menu', {
       method:'POST',
@@ -534,6 +556,9 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
       const parsed = JSON.parse(reader.result);
       if(!parsed.categories || !parsed.products) throw new Error('invalid');
       data = parsed;
+      if(typeof data.deliveryNote !== 'string') data.deliveryNote = '';
+      const noteInp = document.getElementById('deliveryNoteInput');
+      if(noteInp) noteInp.value = data.deliveryNote;
       render();
       showToast('فایل بارگذاری شد — فراموش نکن «ذخیره تغییرات» را بزنی.');
     }catch(err){
@@ -547,6 +572,10 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
 (async function init(){
   mainEl.innerHTML = '<div class="empty-note">در حال بارگذاری منو...</div>';
   data = await loadData();
+  if(typeof data.deliveryNote !== 'string') data.deliveryNote = '';
+  const noteInp = document.getElementById('deliveryNoteInput');
+  noteInp.value = data.deliveryNote;
+  noteInp.addEventListener('input', ()=>{ data.deliveryNote = noteInp.value; });
   render();
 })();
 </script>
